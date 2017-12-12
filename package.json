@@ -1,0 +1,16 @@
+{
+  "name": "kuvalda-nodejs",
+  "author": "slavakukuyev",
+  "version": "0.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.29.0"
+  },
+  "devDependencies": {
+    "dotenv": "^4.0.0",
+    "nodemon": "^1.12.5"
+  }
+}
