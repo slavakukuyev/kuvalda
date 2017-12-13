@@ -7,7 +7,9 @@
     "start": "nodemon index.js"
   },
   "dependencies": {
-    "node-telegram-bot-api": "^0.29.0"
+    "lodash": "^4.17.4",
+    "node-telegram-bot-api": "^0.29.0",
+    "request": "^2.83.0"
   },
   "devDependencies": {
     "dotenv": "^4.0.0",
