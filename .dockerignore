@@ -1,0 +1,6 @@
+node_modules
+*.log
+*.lock
+README.md
+.env
+.gitignore

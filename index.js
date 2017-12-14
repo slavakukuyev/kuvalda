@@ -3,7 +3,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const _ = require('lodash');
 const request = require('request')
 
-const TOKEN = process.env.TOKEN || '111111';
+const TOKEN = process.env.TOKEN || 'yourValidToken';
 
 const bot = new TelegramBot(TOKEN, {
     polling: true
@@ -54,6 +54,25 @@ bot.on('message', msg => {
 
 bot.on('callback_query', query => {
     //console.log(JSON.stringify(query, null, 2))
+    const symbol = 'RUB';
+    const base = query.data;
+
+    request(`http://api.fixer.io/latest?symbols=${symbol}&base=${base}`, 
+    (err, res, body)=> {
+        if(err){
+            throw new Error(err);
+        }
+
+        if(res.statusCode === 200){
+            const currencyData = JSON.parse(body);
+            const html = `<b> ${symbol} </b> - <em>${currencyData.rates[symbol]} ${base} </em>`
+            
+            bot.sendMessage(query.message.chat.id, html, {
+                parse_mode: 'HTML'
+            })
+        }
+    }
+)
 
     query.data
 });
