@@ -9,6 +9,8 @@ const bot = new TelegramBot(TOKEN, {
     polling: true
 });
 
+var symbols_btns;
+
 const KB = {
     picture: 'picture',
     rate: 'Currency rate',
@@ -40,7 +42,7 @@ bot.on('message', msg => {
             sendPictures(msg.chat.id)
             break;
         case KB.rate:
-            sendCurrencyScreen(msg.chat.id);
+            sendCurrencyToConvert(msg.chat.id);
             break;
         case KB.back:
             welcome(msg.chat.id, msg.from.username);
@@ -53,44 +55,30 @@ bot.on('message', msg => {
 });
 
 bot.on('callback_query', query => {
-    //console.log(JSON.stringify(query, null, 2))
-    const symbol = 'RUB';
-    const base = query.data;
+    request('https://api.bitfinex.com/v1/pubticker/' + query.data,
+        (err, res, body) => {
+            if (err) {
+                throw new Error(err);
+            }
 
-    request(`http://api.fixer.io/latest?symbols=${symbol}&base=${base}`, 
-    (err, res, body)=> {
-        if(err){
-            throw new Error(err);
+            console.log('rate for ' + query.data + ': ', body);
+
+            if (res.statusCode === 200) {
+                const rates = JSON.parse(body);
+                const html = `Rate for ${query.data.toUpperCase()} <b>Hight:  ${rates.high} </b>`;
+
+                bot.sendMessage(query.message.chat.id, html, {
+                    parse_mode: 'HTML'
+                });
+            }
         }
-
-        if(res.statusCode === 200){
-            const currencyData = JSON.parse(body);
-            const html = `<b> ${symbol} </b> - <em>${currencyData.rates[symbol]} ${base} </em>`
-            
-            bot.sendMessage(query.message.chat.id, html, {
-                parse_mode: 'HTML'
-            })
-        }
-    }
-)
-
-    query.data
+    );
 });
 
-function sendCurrencyScreen(chatId) {
-    bot.sendMessage(chatId, 'Choose currency: ', {
+function sendCurrencyToConvert(chatId, from_to = 'FROM') {
+    bot.sendMessage(chatId, 'Choose currency to convert ' + from_to + ': ', {
         reply_markup: {
-            inline_keyboard: [
-                [{
-                    text: KB.btc,
-                    callback_data: 'BTC'
-                }]
-                ,
-                [{
-                    text: KB.dollar,
-                    callback_data: 'USD'
-                }],
-            ]
+            inline_keyboard: symbols_btns
         }
     })
 }
@@ -123,3 +111,28 @@ function welcome(chatId, username, start = false) {
         }
     });
 }
+
+function get_rate_symbols() {
+    request(`https://api.bitfinex.com/v1/symbols`,
+        (err, res, body) => {
+            if (err) {
+                throw new Error(err);
+            }
+            console.log('loading symbols: ', body);
+
+            if (res.statusCode === 200) {
+                const symbols = JSON.parse(body);
+                if (symbols && symbols.length) {
+                    symbols_btns = symbols.map(symbol => (
+                        [{
+                            text: symbol.toUpperCase(),
+                            callback_data: symbol
+                        }]
+                    ));
+                }
+            }
+        }
+    )
+}
+
+get_rate_symbols();
