@@ -1,7 +1,8 @@
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 const _ = require('lodash');
-const request = require('request')
+const request = require('request');
+const API_URL = 'https://api.bitfinex.com/v1';
 
 const TOKEN = process.env.TOKEN || 'yourValidToken';
 
@@ -55,13 +56,13 @@ bot.on('message', msg => {
 });
 
 bot.on('callback_query', query => {
-    request('https://api.bitfinex.com/v1/pubticker/' + query.data,
+    request(API_URL + '/pubticker/' + query.data,
         (err, res, body) => {
             if (err) {
                 throw new Error(err);
             }
 
-            console.log('rate for ' + query.data + ': ', body);
+            //console.log('rate for ' + query.data + ': ', body);
 
             if (res.statusCode === 200) {
                 const rates = JSON.parse(body);
@@ -80,7 +81,7 @@ function sendCurrencyToConvert(chatId, from_to = 'FROM') {
         reply_markup: {
             inline_keyboard: symbols_btns
         }
-    })
+    });
 }
 
 function sendPictureByName(chatId, picName) {
@@ -113,13 +114,12 @@ function welcome(chatId, username, start = false) {
 }
 
 function get_rate_symbols() {
-    request(`https://api.bitfinex.com/v1/symbols`,
+    request(API_URL + '/symbols',
         (err, res, body) => {
             if (err) {
                 throw new Error(err);
             }
-            console.log('loading symbols: ', body);
-
+            //console.log('loading symbols: ', body);
             if (res.statusCode === 200) {
                 const symbols = JSON.parse(body);
                 if (symbols && symbols.length) {
