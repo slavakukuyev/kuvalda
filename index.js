@@ -17,6 +17,7 @@ const KB = {
     rate: 'Currency rate',
     btc: 'BTC',
     dollar: 'Dollar',
+    video: 'Video',
     back: 'Back'
 }
 
@@ -31,6 +32,9 @@ const srcs = {
         'https://thumbs.dreamstime.com/z/stacks-gold-coins-dollar-sign-16645801.jpg',
         'https://image.freepik.com/free-icon/usd-dollar-symbol_318-41744.jpg'
     ],
+    [KB.video]: [
+        'https://www.youtube.com/watch?v=Um63OQz3bjo'
+    ]
 }
 
 bot.onText(/\/start/, msg => {
@@ -51,6 +55,9 @@ bot.on('message', msg => {
         case KB.btc:
         case KB.dollar:
             sendPictureByName(msg.chat.id, msg.text)
+            break;
+        case KB.video:
+            sendVideo(msg.chat.id)
             break;
     }
 });
@@ -92,7 +99,7 @@ function sendPictureByName(chatId, picName) {
 }
 
 function sendPictures(chatId) {
-    bot.sendMessage(chatId, 'Choose pictures:', {
+    bot.sendMessage(chatId, 'Choose pictures or video:', {
         reply_markup: {
             keyboard: [
                 [KB.btc, KB.dollar],
@@ -107,7 +114,7 @@ function welcome(chatId, username, start = false) {
     bot.sendMessage(chatId, `Dear ${username}!${start} Please make your choice: `, {
         reply_markup: {
             keyboard: [
-                [KB.picture, KB.rate]
+                [KB.picture, KB.rate, KB.video]
             ]
         }
     });
@@ -133,6 +140,12 @@ function get_rate_symbols() {
             }
         }
     )
+}
+function sendVideo(chatId){
+    bot.sendMessage(chatId, srcs[KB.video][0],  function(err, msg) {
+        console.log(err);
+        console.log(msg);
+      });
 }
 
 get_rate_symbols();
