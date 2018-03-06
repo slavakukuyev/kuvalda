@@ -4,6 +4,11 @@ const _ = require('lodash');
 const request = require('request');
 const API_URL = 'https://api.bitfinex.com/v1';
 
+const loki = require('lokijs');
+const DB = new loki('loki.json', { persistenceMethod: 'fs', autosave: true });
+const srcs = DB.addCollection('srcs');
+
+
 const TOKEN = process.env.TOKEN || 'yourValidToken';
 
 const bot = new TelegramBot(TOKEN, {
@@ -17,12 +22,28 @@ const KB = {
     rate: 'Currency rate',
     btc: 'BTC',
     dollar: 'Dollar',
-    video: 'Video',
     back: 'Back'
+};
+
+function saveSRCS_onload() {
+    srcs.insert({key: KB.btc, urls: [
+        'https://ae01.alicdn.com/kf/HTB15kX_OVXXXXbeapXXq6xXFXXXR/1-x-Gold-Plated-Bitcoin-Coin-Collectible-BTC-Coin-Art-Collection-Gift-Physical.jpg_640x640.jpg',
+        'https://bitcoincasinos.reviews/wp-content/uploads/2016/03/btc-coins.jpg?x29074',
+        'https://www.cryptocompare.com/media/19633/btc.png?width=200'
+    ]})
+
+    srcs.insert({key: KB.dollar, urls: [
+        'http://cliparting.com/wp-content/uploads/2017/01/Free-clipart-images-dollar-sign.jpg',
+        'https://thumbs.dreamstime.com/z/stacks-gold-coins-dollar-sign-16645801.jpg',
+        'https://image.freepik.com/free-icon/usd-dollar-symbol_318-41744.jpg'
+    ]})
+
+    console.log('srcs have been inserted successfully')
+
 }
 
-const srcs = {
-    [KB.btc]: [
+/* const srcs1 = {
+    ['btc']: [
         'https://ae01.alicdn.com/kf/HTB15kX_OVXXXXbeapXXq6xXFXXXR/1-x-Gold-Plated-Bitcoin-Coin-Collectible-BTC-Coin-Art-Collection-Gift-Physical.jpg_640x640.jpg',
         'https://bitcoincasinos.reviews/wp-content/uploads/2016/03/btc-coins.jpg?x29074',
         'https://www.cryptocompare.com/media/19633/btc.png?width=200'
@@ -35,7 +56,7 @@ const srcs = {
     [KB.video]: [
         'https://www.youtube.com/watch?v=Um63OQz3bjo'
     ]
-}
+} */
 
 bot.onText(/\/start/, msg => {
     welcome(msg.chat.id, msg.from.username, true);
@@ -56,9 +77,9 @@ bot.on('message', msg => {
         case KB.dollar:
             sendPictureByName(msg.chat.id, msg.text)
             break;
-        case KB.video:
+       /*  case KB.video:
             sendVideo(msg.chat.id)
-            break;
+            break; */
     }
 });
 
@@ -92,14 +113,14 @@ function sendCurrencyToConvert(chatId, from_to = 'FROM') {
 }
 
 function sendPictureByName(chatId, picName) {
-    const src = srcs[picName];
+    const src = srcs.find({key: picName})[0]['urls'];
     let pasrc = src[_.random(0, src.length - 1)];
 
     bot.sendPhoto(chatId, pasrc);
 }
 
 function sendPictures(chatId) {
-    bot.sendMessage(chatId, 'Choose pictures or video:', {
+    bot.sendMessage(chatId, 'Choose pictures:', {
         reply_markup: {
             keyboard: [
                 [KB.btc, KB.dollar],
@@ -114,7 +135,7 @@ function welcome(chatId, username, start = false) {
     bot.sendMessage(chatId, `Dear ${username}!${start} Please make your choice: `, {
         reply_markup: {
             keyboard: [
-                [KB.picture, KB.rate, KB.video]
+                [KB.picture, KB.rate]
             ]
         }
     });
@@ -136,16 +157,16 @@ function get_rate_symbols() {
                             callback_data: symbol
                         }]
                     ));
+
+                    console.log('symbols loaded successfully');
                 }
             }
         }
     )
 }
-function sendVideo(chatId){
-    bot.sendMessage(chatId, srcs[KB.video][0],  function(err, msg) {
-        console.log(err);
-        console.log(msg);
-      });
-}
 
+
+saveSRCS_onload();
 get_rate_symbols();
+
+console.log('work started...');
